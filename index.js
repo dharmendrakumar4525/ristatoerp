@@ -22,7 +22,7 @@ const token = generateToken();
 
 // API to fetch sales data
 app.post('/fetch-sales-summary', (req, res) => {
-  const { branch, period } = req.body;
+  const { branch, period } = req.params;
 
   if (!branch || !period) {
     return res.status(400).json({ error: 'Branch and period are required!' });
@@ -67,7 +67,7 @@ app.post('/fetch-sales-summary', (req, res) => {
 });
 
 const branchApi = {
-    
+
     host: 'api.ristaapps.com',
     path: '/v1/branch/list',
     headers: {
