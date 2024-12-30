@@ -22,8 +22,8 @@ const token = generateToken();
 
 // API to fetch sales data
 app.post('/fetch-sales-summary', (req, res) => {
-  const { branch, period } = req.params;
-
+  const { branch, period } = req.query;
+  
   if (!branch || !period) {
     return res.status(400).json({ error: 'Branch and period are required!' });
   }
