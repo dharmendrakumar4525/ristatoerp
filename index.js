@@ -1,6 +1,9 @@
-const express = require('express');
-const jwt = require('jsonwebtoken');
-const https = require('https');
+import express from 'express';
+import jwt from 'jsonwebtoken';
+import axios from 'axios';
+import https from 'https';
+import fs from 'fs';
+
 
 const app = express();
 app.use(express.json());
@@ -93,8 +96,64 @@ const branchApi = {
   }).on('error', (e) => {
     console.error('Error:', e);
   });
+
+
+  app.get('/upload-after-login', async (req, res) => {
+    const loginData = JSON.stringify({
+      usr: 'kunal.m@jcssglobal.com',
+      pwd: 'jcss@123',
+    });
   
+    const loginConfig = {
+      method: 'post',
+      maxBodyLength: Infinity,
+      url: 'https://hattikaapi.frappe.cloud/api/method/login',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: loginData,
+    };
   
+    try {
+      // Step 1: Perform login and extract cookies
+      const loginResponse = await axios.request(loginConfig);
+      const cookies = loginResponse.headers['set-cookie'];
+      
+      if (!cookies) {
+        return res.status(400).json({ error: 'Failed to retrieve cookies from login response' });
+      }
+  
+      // Step 2: Prepare data for the file upload API
+      const data = new FormData();
+      data.append('file', fs.createReadStream('./path/to/your/file.csv')); // Update with your file path
+      data.append('is_private', '1');
+      data.append('folder', 'Home');
+      data.append('doctype', 'Data Import');
+      data.append('docname', 'Sales Invoice Import on 2024-10-28 18:07:54.193362');
+      data.append('fieldname', 'import_file');
+  
+      const uploadConfig = {
+        method: 'post',
+        maxBodyLength: Infinity,
+        url: 'https://hattikaapi.frappe.cloud/api/method/upload_file',
+        headers: {
+          ...data.getHeaders(),
+          Cookie: cookies.join('; '), // Pass cookies to the next API call
+        },
+        data: data,
+      };
+  
+      // Step 3: Perform the file upload
+      const uploadResponse = await axios.request(uploadConfig);
+      res.json({ uploadResponse: uploadResponse.data });
+    } catch (error) {
+      console.error('Error:', error.message);
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+
+
 
 // Start the server
 const PORT = 3001;
