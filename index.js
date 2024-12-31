@@ -1,3 +1,4 @@
+
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import axios from 'axios';
@@ -125,7 +126,7 @@ const branchApi = {
   
       // Step 2: Prepare data for the file upload API
       const data = new FormData();
-      data.append('file', fs.createReadStream('./path/to/your/file.csv')); // Update with your file path
+      data.append('file', fs.createReadStream('./blank.xlsx')); 
       data.append('is_private', '1');
       data.append('folder', 'Home');
       data.append('doctype', 'Data Import');
