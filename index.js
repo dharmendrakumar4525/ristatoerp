@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import axios from 'axios';
 import https from 'https';
 import fs from 'fs';
+import FormData from 'form-data';
 
 
 const app = express();
@@ -130,8 +131,9 @@ const branchApi = {
       data.append('is_private', '1');
       data.append('folder', 'Home');
       data.append('doctype', 'Data Import');
-      data.append('docname', 'Sales Invoice Import on 2024-10-28 18:07:54.193362');
+      data.append('docname', 'Sales Invoice Import on 2024-10-26 18:07:54.193362');
       data.append('fieldname', 'import_file');
+
   
       const uploadConfig = {
         method: 'post',
@@ -139,7 +141,7 @@ const branchApi = {
         url: 'https://hattikaapi.frappe.cloud/api/method/upload_file',
         headers: {
           ...data.getHeaders(),
-          Cookie: cookies.join('; '), // Pass cookies to the next API call
+          Cookie: cookies.join('; '), 
         },
         data: data,
       };
@@ -148,7 +150,7 @@ const branchApi = {
       const uploadResponse = await axios.request(uploadConfig);
       res.json({ uploadResponse: uploadResponse.data });
     } catch (error) {
-      console.error('Error:', error.message);
+      console.error('Error:', error);
       res.status(500).json({ error: error.message });
     }
   });
@@ -157,7 +159,7 @@ const branchApi = {
 
 
 // Start the server
-const PORT = 3001;
+const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
