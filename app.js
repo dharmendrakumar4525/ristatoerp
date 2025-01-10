@@ -17,6 +17,9 @@ const db = mysql.createPool({
   user: '86bc9c946430d65',
   password: 'e93155e00fa3009f5a75',
   database: '_a8ce172a2eb3e851',
+  ssl: {
+    rejectUnauthorized: true, // Ensures SSL certificates are verified
+  },
 }).promise();
 console.log(db);
 
