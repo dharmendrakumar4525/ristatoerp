@@ -1,529 +1,613 @@
-const express = require('express');
-const mysql = require('mysql2');
-const jwt =require('jsonwebtoken');
-const axios = require('axios');
-const path = require('path');
-require('dotenv').config();
-const sheet= require('./masterdata.json')
-const obj =require('./output')
-const taxes =require('./taxes')
-const test =require('./testupload')
-const cron = require('node-cron');
+const express = require("express");
+const mysql = require("mysql2/promise");
+const jwt = require("jsonwebtoken");
+const axios = require("axios");
+const path = require("path");
+require("dotenv").config();
+const sheet = require("./masterdata.json");
+const obj = require("./output");
+const taxes = require("./taxes");
+const test = require("./testupload");
+const cron = require("node-cron");
 const app = express();
 
-// MySQL Connection
-const db = mysql.createPool({
-  host: 'n2-mumbai.frappe.cloud',
-  user: '86bc9c946430d65',
-  password: 'e93155e00fa3009f5a75',
-  database: '_a8ce172a2eb3e851',
-  ssl: {
-    rejectUnauthorized: true, // Ensures SSL certificates are verified
-  },
-}).promise();
-console.log(db);
+let pool;
 
-const testConnection = async () => {
+// Initialize connection pool
+const initializePool = () => {
+  if (!pool) {
+    pool = mysql.createPool({
+      host: "n2-mumbai.frappe.cloud",
+      user: "86bc9c946430d65",
+      password: "e93155e00fa3009f5a75",
+      database: "_a8ce172a2eb3e851",
+      ssl: {
+        rejectUnauthorized: true,
+      },
+      waitForConnections: true,
+      connectionLimit: 2, // Adjust this value based on your application needs
+      queueLimit: 0,
+    });
+    console.log("Connection pool initialized!");
+  }
+  return pool;
+};
+
+// Query function using the pool
+const query = async (sql, params, retries = 3) => {
+  const pool = initializePool();
+  while (retries > 0) {
+    try {
+      const [rows] = await pool.execute(sql, params);
+      console.log(rows, "jdjdjdjdjdjdj");
+      return rows;
+    } catch (error) {
+      if (error.code === "ER_USER_LIMIT_REACHED" && retries > 0) {
+        console.log(`Retrying query... (${3 - retries} retries left)`);
+        retries--;
+        await new Promise((resolve) => setTimeout(resolve, 10000)); // Wait 1 second
+      } else {
+        throw error;
+      }
+    }
+  }
+  throw new Error("Max retries reached for query execution.");
+};
+
+const apiKey = "8d3b20c0-296d-4e50-926b-1da264da401e";
+const secretKey = "qkCOlbB8C-drun-3XjhqV0r93I0YPFxU2oMfyNMNAos";
+
+// // Utility to generate JWT token
+const generateToken = () => {
+  const tokenCreationTime = Math.floor(Date.now() / 1000);
+  const payload = {
+    iss: apiKey,
+    iat: tokenCreationTime,
+  };
+  return jwt.sign(payload, secretKey);
+};
+
+const fetchSalesSummary = async () => {
+  const token = generateToken();
+  let branch_list;
   try {
-    const connection = await db.getConnection();
-    console.log('Database connection successful!');
-    connection.release(); // Release the connection back to the pool
-
-    // Run a simple query to test
-    const [rows] = await db.query('SELECT DATABASE();');
-    console.log('Current Database:', rows);
+    branch_list = await axios.get("https://api.ristaapps.com/v1/branch/list", {
+      headers: {
+        "x-api-key": apiKey,
+        "x-api-token": token,
+        "content-type": "application/json",
+      },
+    });
   } catch (error) {
-    console.error('Database connection failed:', error.message);
+    console.error("Error:", error.message);
+  }
+  const branch_data = branch_list.data;
+  if (branch_data.length == 0) {
+    return console.log("No Branch fetched!");
+  }
+  const getOneDayBeforeDate = () => {
+    const date = new Date();
+    date.setDate(date.getDate() - 1);
+    return date.toISOString().split("T")[0];
+  };
+  for (let i = 0; i < branch_data.length; i++) {
+    let branch = branch_data[i].branchCode;
+    let period = getOneDayBeforeDate();
+    try {
+      const response = await axios.get(
+        `https://api.ristaapps.com/v1/analytics/sales/summary`,
+        {
+          params: { branch, period },
+          headers: {
+            "x-api-key": apiKey,
+            "x-api-token": token,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const items = response.data.items;
+      // res.json()
+      function calculatePercentage(total, percentage) {
+        return (total * percentage) / 100;
+      }
+      let total_SGST = 0;
+      let total_CGST = 0;
+      let total_taxable_value = 0;
+      let item_tax_detail_SGST = {};
+      let item_tax_detail_CGST = {};
+      let total_qty = 0;
+      const transformedItems = await Promise.all(
+        items.map(async (item, index) => {
+          const [rows] = await query(
+            "SELECT * FROM master_data WHERE rista_name = ?",
+            [item.itemName]
+          );
+          console.log(rows, "rowsrowsrowsrowsrowsrowsrowsrowsrowsrowsrows");
+         
+          const [warehouse] = await query(
+            "SELECT * FROM warehouse_data WHERE branch_code = ?",
+            [branch]
+          );
+          warehouse[0] = warehouse;
+          if(!rows==undefined){
+            rows[0] = rows;
+          let parse_taxes = JSON.parse(rows[0]?.item_tax_rate)
+            ? JSON.parse(rows[0]?.item_tax_rate)
+            : {};
+
+          if (parse_taxes) {
+            let SGST_perc = parse_taxes["Output Tax SGST - HFABPL"];
+            let CGST_perc = parse_taxes["Output Tax CGST - HFABPL"];
+            let tax_amount_SGST = calculatePercentage(
+              item.itemTotalgrossAmount - item.itemTotalDiscountAmount,
+              SGST_perc
+            );
+            let tax_amount_CGST = calculatePercentage(
+              item.itemTotalgrossAmount - item.itemTotalDiscountAmount,
+              CGST_perc
+            );
+            total_SGST += +tax_amount_SGST;
+            total_CGST += +tax_amount_CGST;
+            item_tax_detail_SGST[item.itemName] = [SGST_perc, tax_amount_SGST];
+            item_tax_detail_CGST[item.itemName] = [CGST_perc, tax_amount_CGST];
+          } else {
+            item_tax_detail_SGST[item.itemName] = [0, 0];
+            item_tax_detail_CGST[item.itemName] = [0, 0];
+          }
+          total_taxable_value += +(
+            item.itemTotalgrossAmount - item.itemTotalDiscountAmount
+          );
+          total_qty += +item.itemTotalQty;
+          return {
+            docstatus: 0,
+            doctype: "Sales Invoice Item",
+            name: "new-sales-invoice-item-uicnovjvho",
+            __islocal: 1,
+            __unsaved: 1,
+            owner: "kunal.m@jcssglobal.com",
+            has_item_scanned: 0,
+            stock_uom: rows[0].uom,
+            margin_type: "",
+            is_free_item: 0,
+            grant_commission: 0,
+            delivered_by_supplier: 0,
+            is_fixed_asset: 0,
+            enable_deferred_revenue: 0,
+            use_serial_batch_fields: 0,
+            allow_zero_valuation_rate: 0,
+            page_break: 0,
+            parent: "new-sales-invoice-bfbpkipkkt",
+            parentfield: "items",
+            parenttype: "Sales Invoice",
+            idx: index + 1,
+            item_code: rows[0]?.erp_new_item_name,
+            item_name: rows[0]?.erp_new_item_name,
+            qty: item.itemTotalQty,
+            uom: rows[0].uom,
+            rate: item.itemTotalgrossAmount / item.itemTotalQty,
+            amount: item.itemTotalgrossAmount,
+            discount_amount: item.itemTotalDiscountAmount,
+            discount_account: "Discount Allowed - HFABPL",
+            taxable_value:
+              item.itemTotalgrossAmount - item.itemTotalDiscountAmount,
+            description: rows[0]?.erp_new_item_name,
+            item_group: rows[0]?.item_group || null,
+            income_account: rows[0]?.default_income_account || null,
+            warehouse: warehouse[0]?.warehouse_name || null,
+            cost_center: warehouse[0]?.warehouse_name || null,
+            item_tax_template: rows[0]?.item_tax_template || null,
+            item_tax_rate: rows[0]?.item_tax_rate || null,
+            conversion_factor: 0,
+            stock_qty: 0,
+            price_list_rate: 0,
+            base_price_list_rate: 0,
+            margin_rate_or_amount: 0,
+            rate_with_margin: 0,
+            base_rate_with_margin: 0,
+            base_rate: item.itemTotalgrossAmount / item.itemTotalQty,
+            base_amount: item.itemTotalgrossAmount,
+            stock_uom_rate: 0,
+            net_rate: item.itemTotalgrossAmount / item.itemTotalQty,
+            net_amount: item.itemTotalgrossAmount,
+            base_net_rate: item.itemTotalgrossAmount / item.itemTotalQty,
+            base_net_amount: item.itemTotalgrossAmount,
+            igst_rate: 0,
+            cgst_rate: 0,
+            sgst_rate: 0,
+            cess_rate: 0,
+            cess_non_advol_rate: 0,
+            igst_amount: 0,
+            cgst_amount: 0,
+            sgst_amount: 0,
+            cess_amount: 0,
+            cess_non_advol_amount: 0,
+            weight_per_unit: 0,
+            total_weight: 0,
+            incoming_rate: 0,
+            actual_batch_qty: 0,
+            actual_qty: 0,
+            company_total_stock: 0,
+            delivered_qty: 0,
+            has_margin: false,
+            child_docname: "new-sales-invoice-item-uicnovjvho",
+            discount_percentage: 0,
+          };
+        }
+        })
+      );
+
+      /*-----------------For taxes SGST--------------------------*/
+      taxes[0].tax_amount = +total_SGST.toFixed(2);
+      taxes[0].tax_amount_after_discount_amount = +total_SGST.toFixed(2);
+      taxes[0].base_tax_amount = +total_SGST.toFixed(2);
+      taxes[0].base_tax_amount_after_discount_amount = +total_SGST.toFixed(2);
+      taxes[0].total = +(total_taxable_value + total_SGST).toFixed(2);
+      taxes[0].base_total = +(total_taxable_value + total_SGST).toFixed(2);
+      taxes[0].item_wise_tax_detail = +item_tax_detail_SGST;
+
+      /*-----------------For taxes CGST--------------------------*/
+      taxes[1].tax_amount = +total_CGST.toFixed(2);
+      taxes[1].tax_amount_after_discount_amount = +total_CGST.toFixed(2);
+      taxes[1].base_tax_amount = +total_CGST.toFixed(2);
+      taxes[1].base_tax_amount_after_discount_amount = +total_CGST.toFixed(2);
+      taxes[1].total = +(total_taxable_value + total_CGST).toFixed(2);
+      taxes[1].base_total = +(total_taxable_value + total_CGST).toFixed(2);
+      taxes[1].item_wise_tax_detail = +item_tax_detail_CGST;
+
+      obj.base_total = total_taxable_value;
+      obj.base_net_total = total_taxable_value;
+      obj.total = total_taxable_value;
+      obj.net_total = total_taxable_value;
+      obj.base_grand_total = total_taxable_value;
+      obj.grand_total =
+        total_taxable_value + +total_SGST.toFixed(2) + +total_CGST.toFixed(2);
+      obj.base_total_taxes_and_charges =
+        +total_SGST.toFixed(2) + +total_CGST.toFixed(2);
+      obj.total_taxes_and_charges =
+        +total_SGST.toFixed(2) + +total_CGST.toFixed(2);
+      obj.base_rounded_total = Math.round(
+        total_taxable_value + +total_SGST.toFixed(2) + +total_CGST.toFixed(2)
+      );
+      obj.rounded_total = Math.round(
+        total_taxable_value + +total_SGST.toFixed(2) + +total_CGST.toFixed(2)
+      );
+      obj.outstanding_amount = Math.round(
+        total_taxable_value + +total_SGST.toFixed(2) + +total_CGST.toFixed(2)
+      );
+      obj.base_rounding_adjustment = +(
+        obj.base_rounded_total -
+        (total_taxable_value + +total_SGST.toFixed(2) + +total_CGST.toFixed(2))
+      ).toFixed(2);
+      obj.rounding_adjustment = +(
+        obj.rounded_total -
+        (total_taxable_value + +total_SGST.toFixed(2) + +total_CGST.toFixed(2))
+      ).toFixed(2);
+      obj.total_qty = total_qty;
+      obj.items = transformedItems;
+      obj.taxes = taxes;
+
+      const loginData = JSON.stringify({
+        usr: "kunal.m@jcssglobal.com",
+        pwd: "jcss@123",
+      });
+
+      const loginConfig = {
+        method: "post",
+        maxBodyLength: Infinity,
+        url: "https://hktest.frappe.cloud/api/method/login",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        data: loginData,
+      };
+
+      try {
+        // Step 1: Perform login and extract cookies
+        const loginResponse = await axios.request(loginConfig);
+        const cookies = loginResponse.headers["set-cookie"];
+
+        if (!cookies) {
+          return res
+            .status(400)
+            .json({ error: "Failed to retrieve cookies from login response" });
+        }
+
+        // Step 2: Prepare data for the file upload API
+        const data = new FormData();
+        data.append("doc", JSON.stringify(obj));
+        data.append("action", "Save");
+
+        const uploadConfig = {
+          method: "post",
+          maxBodyLength: Infinity,
+          url: "https://hktest.frappe.cloud/api/method/frappe.desk.form.save.savedocs",
+          headers: {
+            // ...data.getHeaders(),
+            Cookie: cookies.join("; "),
+          },
+          data: data,
+        };
+
+        // Step 3: Perform the file upload
+        const uploadResponse = await axios.request(uploadConfig);
+        console.log({ uploadResponse: uploadResponse.data });
+      } catch (error) {
+        console.error("Error:", error);
+        console.log({ error: error.message });
+      }
+    } catch (error) {
+      console.error("Error fetching sales summary:", error);
+      res.status(error.response?.status || 500).json({
+        error:
+          error.response?.data ||
+          "An error occurred while fetching sales summary.",
+      });
+    }
   }
 };
 
-
-// Call the function to test the connection
-testConnection();
-
-// const apiKey = '8d3b20c0-296d-4e50-926b-1da264da401e';
-// const secretKey = 'qkCOlbB8C-drun-3XjhqV0r93I0YPFxU2oMfyNMNAos';
-
-// // Utility to generate JWT token
-// const generateToken = () => {
-//   const tokenCreationTime = Math.floor(Date.now() / 1000);
-//   const payload = {
-//     iss: apiKey,
-//     iat: tokenCreationTime,
-//   };
-//   return jwt.sign(payload, secretKey);
-// };
-
-// const fetchSalesSummary = async () => {
-//   const token = generateToken();
-//   let branch_list
-//   try {
-//     branch_list = await axios.get('https://api.ristaapps.com/v1/branch/list', {
-//       headers: {
-//         'x-api-key': apiKey,
-//         'x-api-token': token,
-//         'content-type': 'application/json',
-//       },
-//     });
-
-//   } catch (error) {
-//     console.error('Error:', error.message);
-//   }
-//     const branch_data=branch_list.data;
-//     if (branch_data.length == 0) {
-//       return console.log('No Branch fetched!');
-//   }
-//     const getOneDayBeforeDate = () => {
-//       const date = new Date();
-//       date.setDate(date.getDate() - 1);
-//       return date.toISOString().split('T')[0]; 
-//     };
-//     for(let i=0;i<branch_data.length;i++){
-//       let branch=branch_data[i].branchCode
-//       let period=getOneDayBeforeDate()
-//       try {
-//         const response = await axios.get(`https://api.ristaapps.com/v1/analytics/sales/summary`, {
-//             params: { branch, period },
-//             headers: {
-//                 'x-api-key': apiKey,
-//                 'x-api-token': token,
-//                 'Content-Type': 'application/json',
-//             },
-//         });
-// const items=response.data.items
-// // res.json()
-// function calculatePercentage(total, percentage) {
-//   return ((total * percentage) / 100); 
-// }
-// let total_SGST = 0; 
-// let total_CGST = 0; 
-// let total_taxable_value=0;
-// let item_tax_detail_SGST={}
-// let item_tax_detail_CGST={}
-// let total_qty=0;
-// const transformedItems = await Promise.all(
-//     items.map(async (item,index) => {
-   
-//         const [rows] = await db.query(
-//             'SELECT * FROM master_data WHERE rista_name = ?',
-//             [item.itemName]
-//         );
-//         const [warehouse] = await db.query(
-//           'SELECT * FROM warehouse_data WHERE branch_code = ?',
-//           [branch]
-//       );
-//       let parse_taxes = JSON.parse(rows[0]?.item_tax_rate);
-//       if(parse_taxes){
-//         let SGST_perc= parse_taxes["Output Tax SGST - HFABPL"]
-//         let CGST_perc= parse_taxes["Output Tax CGST - HFABPL"]
-//         let tax_amount_SGST = calculatePercentage(item.itemTotalgrossAmount - item.itemTotalDiscountAmount,SGST_perc)
-//         let tax_amount_CGST = calculatePercentage(item.itemTotalgrossAmount - item.itemTotalDiscountAmount,CGST_perc)
-//         total_SGST += +tax_amount_SGST;
-//         total_CGST += +tax_amount_CGST;
-//         item_tax_detail_SGST[item.itemName]=[SGST_perc,tax_amount_SGST]
-//         item_tax_detail_CGST[item.itemName]=[CGST_perc,tax_amount_CGST]
-//       }else{
-//         item_tax_detail_SGST[item.itemName]=[0,0]
-//         item_tax_detail_CGST[item.itemName]=[0,0]
-//       }
-//       total_taxable_value += +(item.itemTotalgrossAmount - item.itemTotalDiscountAmount)
-//       total_qty += +item.itemTotalQty;
-//       return {
-//         docstatus: 0,
-//         doctype: "Sales Invoice Item",
-//         name: "new-sales-invoice-item-uicnovjvho",
-//         __islocal: 1,
-//         __unsaved: 1,
-//         owner: "kunal.m@jcssglobal.com",
-//         has_item_scanned: 0,
-//         stock_uom: rows[0].uom,
-//         margin_type: "",
-//         is_free_item: 0,
-//         grant_commission: 0,
-//         delivered_by_supplier: 0,
-//         is_fixed_asset: 0,
-//         enable_deferred_revenue: 0,
-//         use_serial_batch_fields: 0,
-//         allow_zero_valuation_rate: 0,
-//         page_break: 0,
-//         parent: "new-sales-invoice-bfbpkipkkt",
-//         parentfield: "items",
-//         parenttype: "Sales Invoice",
-//         idx: index + 1,
-//         item_code: rows[0]?.erp_new_item_name,
-//         item_name: rows[0]?.erp_new_item_name,
-//         qty: item.itemTotalQty,
-//         uom: rows[0].uom,
-//         rate: item.itemTotalgrossAmount / item.itemTotalQty,
-//         amount: item.itemTotalgrossAmount,
-//         discount_amount: item.itemTotalDiscountAmount,
-//         discount_account: "Discount Allowed - HFABPL",
-//         taxable_value: item.itemTotalgrossAmount - item.itemTotalDiscountAmount,
-//         description: rows[0]?.erp_new_item_name,
-//         item_group: rows[0]?.item_group || null,
-//         income_account: rows[0]?.default_income_account || null,
-//         warehouse: warehouse[0]?.warehouse_name || null,
-//         cost_center: warehouse[0]?.warehouse_name || null,
-//         item_tax_template: rows[0]?.item_tax_template || null,
-//         item_tax_rate: rows[0]?.item_tax_rate || null,
-//         conversion_factor: 0,
-//         stock_qty: 0,
-//         price_list_rate: 0,
-//         base_price_list_rate: 0,
-//         margin_rate_or_amount: 0,
-//         rate_with_margin: 0,
-//         base_rate_with_margin: 0,
-//         base_rate: item.itemTotalgrossAmount / item.itemTotalQty,
-//         base_amount: item.itemTotalgrossAmount,
-//         stock_uom_rate: 0,
-//         net_rate: item.itemTotalgrossAmount / item.itemTotalQty,
-//         net_amount: item.itemTotalgrossAmount,
-//         base_net_rate: item.itemTotalgrossAmount / item.itemTotalQty,
-//         base_net_amount: item.itemTotalgrossAmount,
-//         igst_rate: 0,
-//         cgst_rate: 0,
-//         sgst_rate: 0,
-//         cess_rate: 0,
-//         cess_non_advol_rate: 0,
-//         igst_amount: 0,
-//         cgst_amount: 0,
-//         sgst_amount: 0,
-//         cess_amount: 0,
-//         cess_non_advol_amount: 0,
-//         weight_per_unit: 0,
-//         total_weight: 0,
-//         incoming_rate: 0,
-//         actual_batch_qty: 0,
-//         actual_qty: 0,
-//         company_total_stock: 0,
-//         delivered_qty: 0,
-//         has_margin: false,
-//         child_docname: "new-sales-invoice-item-uicnovjvho",
-//         discount_percentage: 0
-//       }
-//     })
-// );
-// /*-----------------For taxes SGST--------------------------*/
-// taxes[0].tax_amount=+total_SGST.toFixed(2)
-// taxes[0].tax_amount_after_discount_amount=+total_SGST.toFixed(2)
-// taxes[0].base_tax_amount=+total_SGST.toFixed(2)
-// taxes[0].base_tax_amount_after_discount_amount=+total_SGST.toFixed(2)
-// taxes[0].total=+(total_taxable_value + total_SGST).toFixed(2)
-// taxes[0].base_total=+(total_taxable_value + total_SGST).toFixed(2)
-// taxes[0].item_wise_tax_detail=+item_tax_detail_SGST
-
-// /*-----------------For taxes CGST--------------------------*/
-// taxes[1].tax_amount=+total_CGST.toFixed(2)
-// taxes[1].tax_amount_after_discount_amount=+total_CGST.toFixed(2)
-// taxes[1].base_tax_amount=+total_CGST.toFixed(2)
-// taxes[1].base_tax_amount_after_discount_amount=+total_CGST.toFixed(2)
-// taxes[1].total=+(total_taxable_value + total_CGST).toFixed(2)
-// taxes[1].base_total=+(total_taxable_value + total_CGST).toFixed(2)
-// taxes[1].item_wise_tax_detail=+item_tax_detail_CGST
-
-// obj.base_total=total_taxable_value;
-// obj.base_net_total=total_taxable_value;
-// obj.total=total_taxable_value;
-// obj.net_total=total_taxable_value;
-// obj.base_grand_total=total_taxable_value
-// obj.grand_total= total_taxable_value + +total_SGST.toFixed(2) + +total_CGST.toFixed(2)
-// obj.base_total_taxes_and_charges= +total_SGST.toFixed(2) + +total_CGST.toFixed(2)
-// obj.total_taxes_and_charges= +total_SGST.toFixed(2) + +total_CGST.toFixed(2)
-// obj.base_rounded_total=Math.round(total_taxable_value + +total_SGST.toFixed(2) + +total_CGST.toFixed(2));
-// obj.rounded_total=Math.round(total_taxable_value + +total_SGST.toFixed(2) + +total_CGST.toFixed(2));
-// obj.outstanding_amount=Math.round(total_taxable_value + +total_SGST.toFixed(2) + +total_CGST.toFixed(2));
-// obj.base_rounding_adjustment= +(obj.base_rounded_total - (total_taxable_value + +total_SGST.toFixed(2) + +total_CGST.toFixed(2))).toFixed(2)
-// obj.rounding_adjustment= +(obj.rounded_total - (total_taxable_value + +total_SGST.toFixed(2) + +total_CGST.toFixed(2))).toFixed(2)
-// obj.total_qty=total_qty;
-// obj.items=transformedItems;
-// obj.taxes=taxes;
-
-// const loginData = JSON.stringify({
-//   usr: 'kunal.m@jcssglobal.com',
-//   pwd: 'jcss@123',
-// });
-
-// const loginConfig = {
-//   method: 'post',
-//   maxBodyLength: Infinity,
-//   url: 'https://hktest.frappe.cloud/api/method/login',
-//   headers: {
-//     'Content-Type': 'application/json',
-//   },
-//   data: loginData,
-// };
-
-// try {
-//   // Step 1: Perform login and extract cookies
-//   const loginResponse = await axios.request(loginConfig);
-//   const cookies = loginResponse.headers['set-cookie'];
-  
-//   if (!cookies) {
-//     return res.status(400).json({ error: 'Failed to retrieve cookies from login response' });
-//   }
-
-//   // Step 2: Prepare data for the file upload API
-//   const data = new FormData();
-//   data.append('doc', JSON.stringify(obj));
-//   data.append('action', 'Save');
-
-//   const uploadConfig = {
-//     method: 'post',
-//     maxBodyLength: Infinity,
-//     url: 'https://hktest.frappe.cloud/api/method/frappe.desk.form.save.savedocs',
-//     headers: {
-//       // ...data.getHeaders(),
-//       Cookie: cookies.join('; '), 
-//     },
-//     data: data,
-//   };
-
-//   // Step 3: Perform the file upload
-//     const uploadResponse = await axios.request(uploadConfig);
-//     console.log({ uploadResponse: uploadResponse.data });
-//   } catch (error) {
-//     console.error('Error:', error);
-//     console.log({ error: error.message });
-//   }
-//       } catch (error) {
-//           console.error('Error fetching sales summary:', error);
-//           res.status(error.response?.status || 500).json({
-//               error: error.response?.data || 'An error occurred while fetching sales summary.',
-//           });
-//       }
-//       }
-   
-// }
-// fetchSalesSummary();
+fetchSalesSummary();
 // // Schedule the cron job
-//   cron.schedule('5 0 * * *', () => {
-//     console.log('Running fetch-sales-summary cron job at 12:05 AM');
-//     fetchSalesSummary();
-//   });
-  
-// app.get('/fetch-sales-summary', async (req, res) => {
-//     const { branch, period } = req.query;
+cron.schedule("5 0 * * *", () => {
+  console.log("Running fetch-sales-summary cron job at 12:05 AM");
+  fetchSalesSummary();
+});
 
-//     if (!branch || !period) {
-//         return res.status(400).json({ error: 'Branch and period are required!' });
-//     }
+app.get("/fetch-sales-summary", async (req, res) => {
+  const { branch, period } = req.query;
 
-//     const token = generateToken();
+  if (!branch || !period) {
+    return res.status(400).json({ error: "Branch and period are required!" });
+  }
 
-//     try {
-//         const response = await axios.get(`https://api.ristaapps.com/v1/analytics/sales/summary`, {
-//             params: { branch, period },
-//             headers: {
-//                 'x-api-key': apiKey,
-//                 'x-api-token': token,
-//                 'Content-Type': 'application/json',
-//             },
-//         });
-// const items=response.data.items
-// // res.json()
-// function calculatePercentage(total, percentage) {
-//   return ((total * percentage) / 100); 
-// }
-// let total_SGST = 0; 
-// let total_CGST = 0; 
-// let total_taxable_value=0;
-// let item_tax_detail_SGST={}
-// let item_tax_detail_CGST={}
-// let total_qty=0;
-// const transformedItems = await Promise.all(
-//     items.map(async (item,index) => {
-   
-//         const [rows] = await db.query(
-//             'SELECT * FROM master_data WHERE rista_name = ?',
-//             [item.itemName]
-//         );
-//         const [warehouse] = await db.query(
-//           'SELECT * FROM warehouse_data WHERE branch_code = ?',
-//           [branch]
-//       );
-//       let parse_taxes = JSON.parse(rows[0]?.item_tax_rate);
-//       if(parse_taxes){
-//         let SGST_perc= parse_taxes["Output Tax SGST - HFABPL"]
-//         let CGST_perc= parse_taxes["Output Tax CGST - HFABPL"]
-//         let tax_amount_SGST = calculatePercentage(item.itemTotalgrossAmount - item.itemTotalDiscountAmount,SGST_perc)
-//         let tax_amount_CGST = calculatePercentage(item.itemTotalgrossAmount - item.itemTotalDiscountAmount,CGST_perc)
-//         total_SGST += +tax_amount_SGST;
-//         total_CGST += +tax_amount_CGST;
-//         item_tax_detail_SGST[item.itemName]=[SGST_perc,tax_amount_SGST]
-//         item_tax_detail_CGST[item.itemName]=[CGST_perc,tax_amount_CGST]
-//       }else{
-//         item_tax_detail_SGST[item.itemName]=[0,0]
-//         item_tax_detail_CGST[item.itemName]=[0,0]
-//       }
-//       total_taxable_value += +(item.itemTotalgrossAmount - item.itemTotalDiscountAmount)
-//       total_qty += +item.itemTotalQty;
-//       return {
-//         docstatus: 0,
-//         doctype: "Sales Invoice Item",
-//         name: "new-sales-invoice-item-uicnovjvho",
-//         __islocal: 1,
-//         __unsaved: 1,
-//         owner: "kunal.m@jcssglobal.com",
-//         has_item_scanned: 0,
-//         stock_uom: rows[0].uom,
-//         margin_type: "",
-//         is_free_item: 0,
-//         grant_commission: 0,
-//         delivered_by_supplier: 0,
-//         is_fixed_asset: 0,
-//         enable_deferred_revenue: 0,
-//         use_serial_batch_fields: 0,
-//         allow_zero_valuation_rate: 0,
-//         page_break: 0,
-//         parent: "new-sales-invoice-bfbpkipkkt",
-//         parentfield: "items",
-//         parenttype: "Sales Invoice",
-//         idx: index + 1,
-//         item_code: rows[0]?.erp_new_item_name,
-//         item_name: rows[0]?.erp_new_item_name,
-//         qty: item.itemTotalQty,
-//         uom: rows[0].uom,
-//         rate: item.itemTotalgrossAmount / item.itemTotalQty,
-//         amount: item.itemTotalgrossAmount,
-//         discount_amount: item.itemTotalDiscountAmount,
-//         discount_account: "Discount Allowed - HFABPL",
-//         taxable_value: item.itemTotalgrossAmount - item.itemTotalDiscountAmount,
-//         description: rows[0]?.erp_new_item_name,
-//         item_group: rows[0]?.item_group || null,
-//         income_account: rows[0]?.default_income_account || null,
-//         warehouse: warehouse[0]?.warehouse_name || null,
-//         cost_center: warehouse[0]?.warehouse_name || null,
-//         item_tax_template: rows[0]?.item_tax_template || null,
-//         item_tax_rate: rows[0]?.item_tax_rate || null,
-//         conversion_factor: 0,
-//         stock_qty: 0,
-//         price_list_rate: 0,
-//         base_price_list_rate: 0,
-//         margin_rate_or_amount: 0,
-//         rate_with_margin: 0,
-//         base_rate_with_margin: 0,
-//         base_rate: item.itemTotalgrossAmount / item.itemTotalQty,
-//         base_amount: item.itemTotalgrossAmount,
-//         stock_uom_rate: 0,
-//         net_rate: item.itemTotalgrossAmount / item.itemTotalQty,
-//         net_amount: item.itemTotalgrossAmount,
-//         base_net_rate: item.itemTotalgrossAmount / item.itemTotalQty,
-//         base_net_amount: item.itemTotalgrossAmount,
-//         igst_rate: 0,
-//         cgst_rate: 0,
-//         sgst_rate: 0,
-//         cess_rate: 0,
-//         cess_non_advol_rate: 0,
-//         igst_amount: 0,
-//         cgst_amount: 0,
-//         sgst_amount: 0,
-//         cess_amount: 0,
-//         cess_non_advol_amount: 0,
-//         weight_per_unit: 0,
-//         total_weight: 0,
-//         incoming_rate: 0,
-//         actual_batch_qty: 0,
-//         actual_qty: 0,
-//         company_total_stock: 0,
-//         delivered_qty: 0,
-//         has_margin: false,
-//         child_docname: "new-sales-invoice-item-uicnovjvho",
-//         discount_percentage: 0
-//       }
-//     })
-// );
-// /*-----------------For taxes SGST--------------------------*/
-// taxes[0].tax_amount=+total_SGST.toFixed(2)
-// taxes[0].tax_amount_after_discount_amount=+total_SGST.toFixed(2)
-// taxes[0].base_tax_amount=+total_SGST.toFixed(2)
-// taxes[0].base_tax_amount_after_discount_amount=+total_SGST.toFixed(2)
-// taxes[0].total=+(total_taxable_value + total_SGST).toFixed(2)
-// taxes[0].base_total=+(total_taxable_value + total_SGST).toFixed(2)
-// taxes[0].item_wise_tax_detail=+item_tax_detail_SGST
+  const token = generateToken();
 
-// /*-----------------For taxes CGST--------------------------*/
-// taxes[1].tax_amount=+total_CGST.toFixed(2)
-// taxes[1].tax_amount_after_discount_amount=+total_CGST.toFixed(2)
-// taxes[1].base_tax_amount=+total_CGST.toFixed(2)
-// taxes[1].base_tax_amount_after_discount_amount=+total_CGST.toFixed(2)
-// taxes[1].total=+(total_taxable_value + total_CGST).toFixed(2)
-// taxes[1].base_total=+(total_taxable_value + total_CGST).toFixed(2)
-// taxes[1].item_wise_tax_detail=+item_tax_detail_CGST
+  try {
+    const response = await axios.get(
+      `https://api.ristaapps.com/v1/analytics/sales/summary`,
+      {
+        params: { branch, period },
+        headers: {
+          "x-api-key": apiKey,
+          "x-api-token": token,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const items = response.data.items;
+    // res.json()
+    function calculatePercentage(total, percentage) {
+      return (total * percentage) / 100;
+    }
+    let total_SGST = 0;
+    let total_CGST = 0;
+    let total_taxable_value = 0;
+    let item_tax_detail_SGST = {};
+    let item_tax_detail_CGST = {};
+    let total_qty = 0;
+    const transformedItems = await Promise.all(
+      items.map(async (item, index) => {
+        const [rows] = await query(
+          "SELECT * FROM master_data WHERE rista_name = ?",
+          [item.itemName]
+        );
 
-// obj.base_total=total_taxable_value;
-// obj.base_net_total=total_taxable_value;
-// obj.total=total_taxable_value;
-// obj.net_total=total_taxable_value;
-// obj.base_grand_total=total_taxable_value
-// obj.grand_total= total_taxable_value + +total_SGST.toFixed(2) + +total_CGST.toFixed(2)
-// obj.base_total_taxes_and_charges= +total_SGST.toFixed(2) + +total_CGST.toFixed(2)
-// obj.total_taxes_and_charges= +total_SGST.toFixed(2) + +total_CGST.toFixed(2)
-// obj.base_rounded_total=Math.round(total_taxable_value + +total_SGST.toFixed(2) + +total_CGST.toFixed(2));
-// obj.rounded_total=Math.round(total_taxable_value + +total_SGST.toFixed(2) + +total_CGST.toFixed(2));
-// obj.outstanding_amount=Math.round(total_taxable_value + +total_SGST.toFixed(2) + +total_CGST.toFixed(2));
-// obj.base_rounding_adjustment= +(obj.base_rounded_total - (total_taxable_value + +total_SGST.toFixed(2) + +total_CGST.toFixed(2))).toFixed(2)
-// obj.rounding_adjustment= +(obj.rounded_total - (total_taxable_value + +total_SGST.toFixed(2) + +total_CGST.toFixed(2))).toFixed(2)
-// obj.total_qty=total_qty;
-// obj.items=transformedItems;
-// obj.taxes=taxes;
+        const [warehouse] = await query(
+          "SELECT * FROM warehouse_data WHERE branch_code = ?",
+          [branch]
+        );
+        rows[0] = rows;
+        warehouse[0] = warehouse;
+        console.log(rows, "kdkdkdkdkd");
+        let parse_taxes = JSON?.parse(rows[0]?.item_tax_rate);
+        if (parse_taxes) {
+          let SGST_perc = parse_taxes["Output Tax SGST - HFABPL"];
+          let CGST_perc = parse_taxes["Output Tax CGST - HFABPL"];
+          let tax_amount_SGST = calculatePercentage(
+            item.itemTotalgrossAmount - item.itemTotalDiscountAmount,
+            SGST_perc
+          );
+          let tax_amount_CGST = calculatePercentage(
+            item.itemTotalgrossAmount - item.itemTotalDiscountAmount,
+            CGST_perc
+          );
+          total_SGST += +tax_amount_SGST;
+          total_CGST += +tax_amount_CGST;
+          item_tax_detail_SGST[item.itemName] = [SGST_perc, tax_amount_SGST];
+          item_tax_detail_CGST[item.itemName] = [CGST_perc, tax_amount_CGST];
+        } else {
+          item_tax_detail_SGST[item.itemName] = [0, 0];
+          item_tax_detail_CGST[item.itemName] = [0, 0];
+        }
+        total_taxable_value += +(
+          item.itemTotalgrossAmount - item.itemTotalDiscountAmount
+        );
+        total_qty += +item.itemTotalQty;
+        return {
+          docstatus: 0,
+          doctype: "Sales Invoice Item",
+          name: "new-sales-invoice-item-uicnovjvho",
+          __islocal: 1,
+          __unsaved: 1,
+          owner: "kunal.m@jcssglobal.com",
+          has_item_scanned: 0,
+          stock_uom: rows[0].uom,
+          margin_type: "",
+          is_free_item: 0,
+          grant_commission: 0,
+          delivered_by_supplier: 0,
+          is_fixed_asset: 0,
+          enable_deferred_revenue: 0,
+          use_serial_batch_fields: 0,
+          allow_zero_valuation_rate: 0,
+          page_break: 0,
+          parent: "new-sales-invoice-bfbpkipkkt",
+          parentfield: "items",
+          parenttype: "Sales Invoice",
+          idx: index + 1,
+          item_code: rows[0]?.erp_new_item_name,
+          item_name: rows[0]?.erp_new_item_name,
+          qty: item.itemTotalQty,
+          uom: rows[0].uom,
+          rate: item.itemTotalgrossAmount / item.itemTotalQty,
+          amount: item.itemTotalgrossAmount,
+          discount_amount: item.itemTotalDiscountAmount,
+          discount_account: "Discount Allowed - HFABPL",
+          taxable_value:
+            item.itemTotalgrossAmount - item.itemTotalDiscountAmount,
+          description: rows[0]?.erp_new_item_name,
+          item_group: rows[0]?.item_group || null,
+          income_account: rows[0]?.default_income_account || null,
+          warehouse: warehouse[0]?.warehouse_name || null,
+          cost_center: warehouse[0]?.warehouse_name || null,
+          item_tax_template: rows[0]?.item_tax_template || null,
+          item_tax_rate: rows[0]?.item_tax_rate || null,
+          conversion_factor: 0,
+          stock_qty: 0,
+          price_list_rate: 0,
+          base_price_list_rate: 0,
+          margin_rate_or_amount: 0,
+          rate_with_margin: 0,
+          base_rate_with_margin: 0,
+          base_rate: item.itemTotalgrossAmount / item.itemTotalQty,
+          base_amount: item.itemTotalgrossAmount,
+          stock_uom_rate: 0,
+          net_rate: item.itemTotalgrossAmount / item.itemTotalQty,
+          net_amount: item.itemTotalgrossAmount,
+          base_net_rate: item.itemTotalgrossAmount / item.itemTotalQty,
+          base_net_amount: item.itemTotalgrossAmount,
+          igst_rate: 0,
+          cgst_rate: 0,
+          sgst_rate: 0,
+          cess_rate: 0,
+          cess_non_advol_rate: 0,
+          igst_amount: 0,
+          cgst_amount: 0,
+          sgst_amount: 0,
+          cess_amount: 0,
+          cess_non_advol_amount: 0,
+          weight_per_unit: 0,
+          total_weight: 0,
+          incoming_rate: 0,
+          actual_batch_qty: 0,
+          actual_qty: 0,
+          company_total_stock: 0,
+          delivered_qty: 0,
+          has_margin: false,
+          child_docname: "new-sales-invoice-item-uicnovjvho",
+          discount_percentage: 0,
+        };
+      })
+    );
+    /*-----------------For taxes SGST--------------------------*/
+    taxes[0].tax_amount = +total_SGST.toFixed(2);
+    taxes[0].tax_amount_after_discount_amount = +total_SGST.toFixed(2);
+    taxes[0].base_tax_amount = +total_SGST.toFixed(2);
+    taxes[0].base_tax_amount_after_discount_amount = +total_SGST.toFixed(2);
+    taxes[0].total = +(total_taxable_value + total_SGST).toFixed(2);
+    taxes[0].base_total = +(total_taxable_value + total_SGST).toFixed(2);
+    taxes[0].item_wise_tax_detail = +item_tax_detail_SGST;
 
-// const loginData = JSON.stringify({
-//   usr: 'kunal.m@jcssglobal.com',
-//   pwd: 'jcss@123',
-// });
+    /*-----------------For taxes CGST--------------------------*/
+    taxes[1].tax_amount = +total_CGST.toFixed(2);
+    taxes[1].tax_amount_after_discount_amount = +total_CGST.toFixed(2);
+    taxes[1].base_tax_amount = +total_CGST.toFixed(2);
+    taxes[1].base_tax_amount_after_discount_amount = +total_CGST.toFixed(2);
+    taxes[1].total = +(total_taxable_value + total_CGST).toFixed(2);
+    taxes[1].base_total = +(total_taxable_value + total_CGST).toFixed(2);
+    taxes[1].item_wise_tax_detail = +item_tax_detail_CGST;
 
-// const loginConfig = {
-//   method: 'post',
-//   maxBodyLength: Infinity,
-//   url: 'https://hktest.frappe.cloud/api/method/login',
-//   headers: {
-//     'Content-Type': 'application/json',
-//   },
-//   data: loginData,
-// };
+    obj.base_total = total_taxable_value;
+    obj.base_net_total = total_taxable_value;
+    obj.total = total_taxable_value;
+    obj.net_total = total_taxable_value;
+    obj.base_grand_total = total_taxable_value;
+    obj.grand_total =
+      total_taxable_value + +total_SGST.toFixed(2) + +total_CGST.toFixed(2);
+    obj.base_total_taxes_and_charges =
+      +total_SGST.toFixed(2) + +total_CGST.toFixed(2);
+    obj.total_taxes_and_charges =
+      +total_SGST.toFixed(2) + +total_CGST.toFixed(2);
+    obj.base_rounded_total = Math.round(
+      total_taxable_value + +total_SGST.toFixed(2) + +total_CGST.toFixed(2)
+    );
+    obj.rounded_total = Math.round(
+      total_taxable_value + +total_SGST.toFixed(2) + +total_CGST.toFixed(2)
+    );
+    obj.outstanding_amount = Math.round(
+      total_taxable_value + +total_SGST.toFixed(2) + +total_CGST.toFixed(2)
+    );
+    obj.base_rounding_adjustment = +(
+      obj.base_rounded_total -
+      (total_taxable_value + +total_SGST.toFixed(2) + +total_CGST.toFixed(2))
+    ).toFixed(2);
+    obj.rounding_adjustment = +(
+      obj.rounded_total -
+      (total_taxable_value + +total_SGST.toFixed(2) + +total_CGST.toFixed(2))
+    ).toFixed(2);
+    obj.total_qty = total_qty;
+    obj.items = transformedItems;
+    obj.taxes = taxes;
 
-// try {
-//   // Step 1: Perform login and extract cookies
-//   const loginResponse = await axios.request(loginConfig);
-//   const cookies = loginResponse.headers['set-cookie'];
-  
-//   if (!cookies) {
-//     return res.status(400).json({ error: 'Failed to retrieve cookies from login response' });
-//   }
+    const loginData = JSON.stringify({
+      usr: "kunal.m@jcssglobal.com",
+      pwd: "jcss@123",
+    });
 
-//   // Step 2: Prepare data for the file upload API
-//   const data = new FormData();
-//   data.append('doc', JSON.stringify(obj));
-//   data.append('action', 'Save');
+    const loginConfig = {
+      method: "post",
+      maxBodyLength: Infinity,
+      url: "https://hktest.frappe.cloud/api/method/login",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      data: loginData,
+    };
 
-//   const uploadConfig = {
-//     method: 'post',
-//     maxBodyLength: Infinity,
-//     url: 'https://hktest.frappe.cloud/api/method/frappe.desk.form.save.savedocs',
-//     headers: {
-//       // ...data.getHeaders(),
-//       Cookie: cookies.join('; '), 
-//     },
-//     data: data,
-//   };
+    try {
+      // Step 1: Perform login and extract cookies
+      const loginResponse = await axios.request(loginConfig);
+      const cookies = loginResponse.headers["set-cookie"];
 
-//   // Step 3: Perform the file upload
-//   const uploadResponse = await axios.request(uploadConfig);
-//   res.json({ uploadResponse: uploadResponse.data });
-// } catch (error) {
-//   console.error('Error:', error);
-//   res.status(500).json({ error: error.message });
-// }
-//     } catch (error) {
-//         console.error('Error fetching sales summary:', error);
-//         res.status(error.response?.status || 500).json({
-//             error: error.response?.data || 'An error occurred while fetching sales summary.',
-//         });
-//     }
-// });
+      if (!cookies) {
+        return res
+          .status(400)
+          .json({ error: "Failed to retrieve cookies from login response" });
+      }
 
-  
- 
+      // Step 2: Prepare data for the file upload API
+      const data = new FormData();
+      data.append("doc", JSON.stringify(obj));
+      data.append("action", "Save");
+
+      const uploadConfig = {
+        method: "post",
+        maxBodyLength: Infinity,
+        url: "https://hktest.frappe.cloud/api/method/frappe.desk.form.save.savedocs",
+        headers: {
+          // ...data.getHeaders(),
+          Cookie: cookies.join("; "),
+        },
+        data: data,
+      };
+
+      // Step 3: Perform the file upload
+      const uploadResponse = await axios.request(uploadConfig);
+      res.json({ uploadResponse: uploadResponse.data });
+    } catch (error) {
+      console.error("Error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  } catch (error) {
+    console.error("Error fetching sales summary:", error);
+    res.status(error.response?.status || 500).json({
+      error:
+        error.response?.data ||
+        "An error occurred while fetching sales summary.",
+    });
+  }
+});
+
 // // API to Upload Excel and Store Data in Database
 // app.get('/api/upload', async (req, res) => {
 
@@ -533,7 +617,7 @@ testConnection();
 //     for (const row of sheetData) {
 //       await db.query(
 //         `INSERT INTO master_data (
-//           rista_name, channel_name, erp_new_item_name, uom, item_group, 
+//           rista_name, channel_name, erp_new_item_name, uom, item_group,
 //           default_income_account, item_tax_template, item_tax_rate, remarks
 //         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 //         [
@@ -550,7 +634,6 @@ testConnection();
 //       );
 //     }
 
-
 //     res.status(200).json({ message: 'Data uploaded and stored successfully!' });
 //   } catch (error) {
 //     console.error(error);
@@ -558,8 +641,8 @@ testConnection();
 //   }
 // });
 
-// // Start the Server
-// const PORT = process.env.PORT || 3000;
-// app.listen(PORT, () => {
-//   console.log(`Server running on port ${PORT}`);
-// });
+// Start the Server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
