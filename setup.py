@@ -1,1 +1,6 @@
-
+app_name = "your_app_name"
+app_title = "Your App Title"
+app_publisher = "Your Name"
+app_description = "App Description"
+app_email = "your_email@example.com"
+app_license = "MIT"
