@@ -81,6 +81,7 @@ const fetchSalesSummary = async () => {
     console.error("Error:", error.message);
   }
   const branch_data = branch_list.data;
+  console.log(branch_data)
   if (branch_data.length == 0) {
     return console.log("No Branch fetched!");
   }
@@ -342,7 +343,12 @@ const fetchSalesSummary = async () => {
   }
 };
 
-// fetchSalesSummary();
+let counter=0
+cron.schedule("*/5 * * * *", () => {
+  console.log("Running fetch-sales-summary cron job every minute", counter);
+  counter++;
+  fetchSalesSummary();
+});
 // // Schedule the cron job
 cron.schedule("5 0 * * *", () => {
   console.log("Running fetch-sales-summary cron job at 12:05 AM");
