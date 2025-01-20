@@ -342,13 +342,7 @@ const fetchSalesSummary = async () => {
     }
   }
 };
-fetchSalesSummary();
-let counter=0
-cron.schedule("*/5 * * * *", () => {
-  console.log("Running fetch-sales-summary cron job every minute", counter);
-  counter++;
-  fetchSalesSummary();
-});
+
 // // Schedule the cron job
 cron.schedule("5 0 * * *", () => {
   console.log("Running fetch-sales-summary cron job at 12:05 AM");
