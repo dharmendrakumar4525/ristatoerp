@@ -1,0 +1,752 @@
+[
+     {
+      "branchName": "Nexus Centre City Mall",
+      "branchCode": "KA0400067",
+      "warehouse": "MYSORE FORUM - HK"
+     },
+     {
+      "branchName": "Aster CMI Hospital",
+      "branchCode": "KA0500040",
+      "warehouse": "ASTER CMI HOSPITAL - HK"
+     },
+     {
+      "branchName": "RMZ Infinity",
+      "branchCode": "KA0202064",
+      "warehouse": "RMZ Infinity - HFABPL"
+     },
+     {
+      "branchName": "Cisco",
+      "branchCode": "KA0399018",
+      "warehouse": "Cisco - HFABPL"
+     },
+     {
+      "branchName": "Jayanagar",
+      "branchCode": "KA0202029",
+      "warehouse": "JAYANAGAR - HK"
+     },
+     {
+      "branchName": "MSR Hospital",
+      "branchCode": "KA0500012",
+      "warehouse": "MSR HOSPITAL - HK"
+     },
+     {
+      "branchName": "Myntra Jabong India Private Limited",
+      "branchCode": "KA0312159",
+      "warehouse": "MYNTRA A - HK"
+     },
+     {
+      "branchName": "TCS Gachibowli",
+      "branchCode": "TS0310023",
+      "warehouse": "TCS ODC 6 - HFABPL"
+     },
+     {
+      "branchName": "TCS Adibatla",
+      "branchCode": "TS0310054",
+      "warehouse": "TCS ADIBATLA - HK"
+     },
+     {
+      "branchName": "TCS ODC 2",
+      "branchCode": "TS0310047",
+      "warehouse": "TCS HYD-ODC 2 - HK"
+     },
+     {
+      "branchName": "RMZ-The Millenia",
+      "branchCode": "KA0202061",
+      "warehouse": "RMZ Millenia - HFABPL"
+     },
+     {
+      "branchName": "Koramangala",
+      "branchCode": "KA0202021",
+      "warehouse": "KORAMANGALA - HK"
+     },
+     {
+      "branchName": "Orion Mall",
+      "branchCode": "KA0400063",
+      "warehouse": "ORION MALL-BRIGADE GATEWAY - HK"
+     },
+     {
+      "branchName": "Manyata Lounge",
+      "branchCode": "KA0201037",
+      "warehouse": "MTP-MFAR MALL-LOUNGE - HK"
+     },
+     {
+      "branchName": "SAP Labs",
+      "branchCode": "KA0311049",
+      "warehouse": "SAP LABS INDIA - HK"
+     },
+     {
+      "branchName": "Karle",
+      "branchCode": "KA0202032",
+      "warehouse": "KARLE - HK"
+     },
+     {
+      "branchName": "Deloitte 3A",
+      "branchCode": "KA0306052",
+      "warehouse": "DELOITTE-3 - HK"
+     },
+     {
+      "branchName": "Spar Mantri Mall",
+      "branchCode": "KA0400009",
+      "warehouse": "MANTRI MALL - HK"
+     },
+     {
+      "branchName": "Reliance Corporate IT Park Ltd-Bldg 22",
+      "branchCode": "MH0313093",
+      "warehouse": "RELIANCE NO 1 - HFABPL"
+     },
+     {
+      "branchName": "Reliance Corporate IT Park Ltd-Bldg 2A",
+      "branchCode": "MH0313097",
+      "warehouse": "RELIANCE NO 2 - HFABPL"
+     },
+     {
+      "branchName": "Mahalakshmi Layout ECom Store",
+      "branchCode": "MLES",
+      "warehouse": "Ecom Sub Store - HFABPL"
+     },
+     {
+      "branchName": "Indiranagar 12th Main",
+      "branchCode": "KA0201104",
+      "warehouse": "INDIRANAGAR - HK"
+     },
+     {
+      "branchName": "Malleshwaram ODC-142022",
+      "branchCode": "KABLR07-140822",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Reliance Corporate IT Park Ltd-Bldg 7D",
+      "branchCode": "MH0313101",
+      "warehouse": "RELIANCE NO 7 - HFABPL"
+     },
+     {
+      "branchName": "KIAL Arrivals(new)",
+      "branchCode": "KA01010065",
+      "warehouse": "KIAL-ARRIVALS - HK"
+     },
+     {
+      "branchName": "Presidency University",
+      "branchCode": "KA0902121",
+      "warehouse": "PRESIDENCY UNIVERSITY - HK"
+     },
+     {
+      "branchName": "RMZ Ecoworld",
+      "branchCode": "KA0202139",
+      "warehouse": "RMZ ECO WORLD - HK"
+     },
+     {
+      "branchName": "Presidency University Unit 2 L Block",
+      "branchCode": "KA0902197",
+      "warehouse": "PRESIDENCY UNIVERSITY (L-Block) - HFABPL"
+     },
+     {
+      "branchName": "REVA University",
+      "branchCode": "KA0903203",
+      "warehouse": "Reva University - HFABPL"
+     },
+     {
+      "branchName": "BCIT",
+      "branchCode": "KA202146",
+      "warehouse": "Bharathiya City - HFABPL"
+     },
+     {
+      "branchName": "PRABUDDHA FUEL JUNCTION",
+      "branchCode": "KABL07-ODC 272829-20",
+      "warehouse": "KUNIGAL - HK"
+     },
+     {
+      "branchName": "Lalbagh West Gate",
+      "branchCode": "KA0202148",
+      "warehouse": "LALBHAG WEST GATE - HK"
+     },
+     {
+      "branchName": "5th Avenue Mall",
+      "branchCode": "KA0202149",
+      "warehouse": "BRIGADE ROAD - HK"
+     },
+     {
+      "branchName": "The Koramangala Club",
+      "branchCode": "KA0203151",
+      "warehouse": "Koramangala Club - HK"
+     },
+     {
+      "branchName": "Spar RMZ Galleria",
+      "branchCode": "KA0400117",
+      "warehouse": "SPAR RMZ GALLERIA - HK"
+     },
+     {
+      "branchName": "Spar Prestige Shantiniketan",
+      "branchCode": "KA0400118",
+      "warehouse": "SPAR PRESTIGE SHANTINIKETAN - HK"
+     },
+     {
+      "branchName": "Indian Institute of Science",
+      "branchCode": "KA0203153",
+      "warehouse": "IISC - HK"
+     },
+     {
+      "branchName": "Hassan Fresh Bean Store",
+      "branchCode": "KA0202152",
+      "warehouse": "Hassan - HK"
+     },
+     {
+      "branchName": "Bangalore Club",
+      "branchCode": "KA0203154",
+      "warehouse": "BANGALORE CLUB - HK"
+     },
+     {
+      "branchName": "Phoenix One Bangalore West",
+      "branchCode": "KA0202155",
+      "warehouse": "Phoenix - HK"
+     },
+     {
+      "branchName": "Prabuddha Fuel Junction",
+      "branchCode": "KA0203157",
+      "warehouse": "KUNIGAL - HK"
+     },
+     {
+      "branchName": "Udaan-Haralur Road",
+      "branchCode": "KA0202158",
+      "warehouse": "Udaan-Haralur Road - HFABPL"
+     },
+     {
+      "branchName": "M Chinnaswamy Stadium-T20I-C1",
+      "branchCode": "KSCAS-0619-C1",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Jewellery Show of India April 2022",
+      "branchCode": "JSI042022",
+      "warehouse": "Jewelry Show of India - HFABPL"
+     },
+     {
+      "branchName": "Deloitte-Meenakshi Tech Park",
+      "branchCode": "TS0306160",
+      "warehouse": "Deloitte (Hyd) - HFABPL"
+     },
+     {
+      "branchName": "Deloitte-BG Road",
+      "branchCode": "KA0306161",
+      "warehouse": "DELOITTE- BG Road - HFABPL"
+     },
+     {
+      "branchName": "Sree Kanteerava Stadium",
+      "branchCode": "SKSODC07-0203",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Bagamane Pallavi Towers",
+      "branchCode": "KA0201162",
+      "warehouse": "Bagamane Pallavi Towers - HFABPL"
+     },
+     {
+      "branchName": "Mahalakshmi Layout",
+      "branchCode": "KA0201164",
+      "warehouse": "Cloud Kitchen - Mahalakshmi - HFABPL"
+     },
+     {
+      "branchName": "Mantralayam ODC",
+      "branchCode": "MODC10082022",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Mysuru Santhe-C1",
+      "branchCode": "KAMYSR07-100922-C1",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Prestige Shantiniketan",
+      "branchCode": "KA0201166",
+      "warehouse": "Prestige Shanthiniketan - HFABPL"
+     },
+     {
+      "branchName": "Reliance Corporate Park-Twin Towers-A1",
+      "branchCode": "MH0313163",
+      "warehouse": "Reliance Corporate Park-Twin Towers-A1 - HFABPL"
+     },
+     {
+      "branchName": "Prestige Technostar",
+      "branchCode": "KA0201167",
+      "warehouse": "Prestige Technostar - HFABPL"
+     },
+     {
+      "branchName": "Mysuru Santhe-C2",
+      "branchCode": "KAMYSR07-100922-C2",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Jubilee Hills",
+      "branchCode": "TS0201168",
+      "warehouse": "Jubilee Hills Hyderabad - HFABPL"
+     },
+     {
+      "branchName": "BIEC ODC-C2",
+      "branchCode": "KABLR07-201022-C2",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "SMART Bazaar Inorbit Mall",
+      "branchCode": "MH0400169",
+      "warehouse": "Reliance Smart Bazar - HFABPL"
+     },
+     {
+      "branchName": "TCS ODC 4",
+      "branchCode": "TS0310170",
+      "warehouse": "TCS ODC 4 - HFABPL"
+     },
+     {
+      "branchName": "KIOC ODC-2022",
+      "branchCode": "KABLR07-061022",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Orion Avenue",
+      "branchCode": "KA0400172",
+      "warehouse": "Orion East - HFABPL"
+     },
+     {
+      "branchName": "St. Joseph's Sports Day 2022",
+      "branchCode": "KABLR07-101122",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Coffee Santhe Oct 2022",
+      "branchCode": "KABLR07-291022",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Global Investors Meet Nov 2022",
+      "branchCode": "KABLR07-021122",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Bengaluru Tech Summit Nov 2022(KOW)",
+      "branchCode": "KABTS11-2022(KOW)",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Bengaluru Tech Summit Nov 2022",
+      "branchCode": "KABTS11-2022",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Vittal Mallya Road",
+      "branchCode": "KA0901175",
+      "warehouse": "St. Joseph Vittal Mallya Road - HFABPL"
+     },
+     {
+      "branchName": "Manipal Hospital Yeshwanthpur",
+      "branchCode": "KA0500174",
+      "warehouse": "Manipal Hospital - Yeshwanthpur - HFABPL"
+     },
+     {
+      "branchName": "SMART Bazaar Jayanagar 9th Block",
+      "branchCode": "KA0400179",
+      "warehouse": "Reliance Smart Bazar Jayanagar - HFABPL"
+     },
+     {
+      "branchName": "Manipal Hospital Millers Road",
+      "branchCode": "KA0500180",
+      "warehouse": "Manipal Hospital - Millers Road - HFABPL"
+     },
+     {
+      "branchName": "Wonderla Bangalore",
+      "branchCode": "KA0701181",
+      "warehouse": "Wonderla - HFABPL"
+     },
+     {
+      "branchName": "Rainbow Children's Hospital BG Road",
+      "branchCode": "KA0500182",
+      "warehouse": "Rainbow Hospital - HFABPL"
+     },
+     {
+      "branchName": "Tesco Bengaluru",
+      "branchCode": "KA0316183",
+      "warehouse": "Tesco - HFABPL"
+     },
+     {
+      "branchName": "IIJS Tritiya 2024-C1",
+      "branchCode": "IIJST2024-C1",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "IIJS Tritiya 2024-C2-Prime Lounge",
+      "branchCode": "IIJST2024-C2",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "IIJS Tritiya 2024-C3",
+      "branchCode": "IIJST2024-C3",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "IIJS Tritiya 2024-C4",
+      "branchCode": "IIJST2024-C4",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Aster RV Hospital",
+      "branchCode": "KA0500186",
+      "warehouse": "Aster Hospital JP Nagar - HFABPL"
+     },
+     {
+      "branchName": "Eduverse Apr 2024",
+      "branchCode": "KABLR07-0424",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Rainbow Children's Hospital Marathahalli",
+      "branchCode": "KA0500190",
+      "warehouse": "Rainbow Hospital Marathahalli - HFABPL" 
+     },
+     {
+      "branchName": "Aster Whitefield Hospital",
+      "branchCode": "KA0500185",
+      "warehouse": "Aster CMI Hospital Whitefield - HFABPL"
+     },
+     {
+      "branchName": "Rainbow Children's Hospital Hebbal",
+      "branchCode": "KA0500191",
+      "warehouse": "Rainbow Hebbal - HFABPL"
+     },
+     {
+      "branchName": "ICICI Bank Towers BKC",
+      "branchCode": "MH0800192",
+      "warehouse": "ICICI Mumbai - HFABPL"
+     },
+     {
+      "branchName": "Orion Mall Food Court",
+      "branchCode": "KA0400193",
+      "warehouse": "Orion Mall Food Court - HFABPL"
+     },
+     {
+      "branchName": "Brigade Tech Gardens",
+      "branchCode": "KA0202195",
+      "warehouse": "Brigade Tech Garden - HFABPL"
+     },
+     {
+      "branchName": "AgriTech India 2023",
+      "branchCode": "KABLR07-SPPE082023",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "St. Joseph's Sports Day Sep 2023",
+      "branchCode": "KABLR07-SJSSD092023",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Food Court-WCC 2023",
+      "branchCode": "KABLR07-FCWCC092023",
+      "warehouse": "World Coffee Conference - HFABPL"
+     },
+     {
+      "branchName": "Merchandise-WCC 2023",
+      "branchCode": "KABLR07-MWCC092023",
+      "warehouse": "World Coffee Conference - HFABPL"
+     },
+     {
+      "branchName": "Kauvery Hospital Marathahalli",
+      "branchCode": "KA0500198",
+      "warehouse": "Kauvery Hospital Marathahalli - HFABPL"
+     },
+     {
+      "branchName": "DIDAC India 2023-C1",
+      "branchCode": "KABLR07-DIDAC102023-C1",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Durga Puja Festival Oct 2023",
+      "branchCode": "MH07-DP102023",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "DIDAC India 2023-C2",
+      "branchCode": "KABLR07-DIDAC102023-C2",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Dhaatu Navaratra Mahotsava 2023",
+      "branchCode": "KABLR07-DNM2023",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Kauvery Hospital Electronic City Block B",
+      "branchCode": "KA0500200",
+      "warehouse": "Kauvery Hospital Electronic City Ground Floor - HFABPL"
+     },
+     {
+      "branchName": "The Capital",
+      "branchCode": "MH0202201",
+      "warehouse": "The Capital (Mumbai) - HFABPL"
+     },
+     {
+      "branchName": "The Jewellery Show Nov 2023",
+      "branchCode": "KABLR07-TJS112023",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "ODC-BR Nov 2023-C1",
+      "branchCode": "KABLR07-BR112023",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "ODC-BR Nov 2023-C2",
+      "branchCode": "KABLR07-BR112023-C2",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "The Capital",
+      "branchCode": "MHTCODC1",
+      "warehouse": "The Capital (Mumbai) - HFABPL"
+     },
+     {
+      "branchName": "The Capital",
+      "branchCode": "MH07-TP112023",
+      "warehouse": "The Capital (Mumbai) - HFABPL"
+     },
+     {
+      "branchName": "Bengaluru Tech Summit Nov-Dec 2023",
+      "branchCode": "KABLR07-N112023",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Bengaluru Tech Summit Nov-Dec 2023-C1",
+      "branchCode": "KABLR07-N112023-C1",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "St. Joseph's School Annual Day 2023",
+      "branchCode": "KABLR07-STJAD112023",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Sankalpa Nov 2023",
+      "branchCode": "KABLR07-SBR112023",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Belagavi ODC Dec 2023-C1",
+      "branchCode": "KABLR07-BWS122023-C1",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Belagavi ODC Dec 2023-C2",
+      "branchCode": "KABLR07-BWS122023-C2",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Belagavi ODC Dec 2023-C3",
+      "branchCode": "KABLR07-BWS122023-C3",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Belagavi ODC Dec 2023-C4",
+      "branchCode": "KABLR07-BWS122023-C4",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Manipal Academy of Higher Education BLR",
+      "branchCode": "KA0902222",
+      "warehouse": "Manipal Academy of Higher Education BLR - HFABPL"
+     },
+     {
+      "branchName": "ET Tech X",
+      "branchCode": "TSETTX122023",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Times Mega Property Expo 2024",
+      "branchCode": "KABH07-0124",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Silver Show of India Dec 2023-C1",
+      "branchCode": "KABLR07-SSI1223-C1",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Silver Show of India Dec 2023-C2",
+      "branchCode": "KABLR07-SSI1223-C2",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Silver Show of India Dec 2023-C3",
+      "branchCode": "KABLR07-SSI1223-C3",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Infantry Road",
+      "branchCode": "KA0202202",
+      "warehouse": "Monarch Infantry - HFABPL"
+     },
+     {
+      "branchName": "Manipal Hospital Whitefield",
+      "branchCode": "KA0500204",
+      "warehouse": "Manipal Hospital Whitefield - HFABPL"
+     },
+     {
+      "branchName": "Wings India 2024",
+      "branchCode": "TSWI0124",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "International Grandmasters Open Chess",
+      "branchCode": "KABLR07-IGOC0124",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Udyami Vokkaliga 2024",
+      "branchCode": "KABLR07-UV0124",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "SJIIAA Golden Jubilee 2024",
+      "branchCode": "KABH07-012024",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Startup Mahakumbh March 2024-C1",
+      "branchCode": "DLBH07-0324-C1",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Nethradhama Eye Hospital Jayanagar",
+      "branchCode": "KA0500206",
+      "warehouse": "Netradhama Hospital – Jayanagar - HFABPL"
+     },
+     {
+      "branchName": "Reliance IBC Knowledge Park",
+      "branchCode": "KA0202207",
+      "warehouse": "Reliance IBC Knowledge Park - HFABPL"
+     },
+     {
+      "branchName": "SJII Golden Jubilee Unity Run 2024",
+      "branchCode": "KABLR07-SJIIGJUR0124",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Hampi Utsav 2024 C1",
+      "branchCode": "KABLR07-HODCC1",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Hampi Utsav 2024 C2",
+      "branchCode": "KABLR07-HODCC2",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Hatti Kraft",
+      "branchCode": "KABLR07-HK0324",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Startup Mahakumbh March 2024-C2",
+      "branchCode": "DLBH07-0324-C2",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Startup Mahakumbh March 2024-C3",
+      "branchCode": "DLBH07-0324-C3",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Startup Mahakumbh March 2024-C5",
+      "branchCode": "DLBH07-0324-C5",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Startup Mahakumbh March 2024-C6",
+      "branchCode": "DLBH07-0324-C6",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Startup Mahakumbh March 2024-C7",
+      "branchCode": "DLBH07-0324-C7",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Startup Mahakumbh March 2024-C8",
+      "branchCode": "DLBH07-0324-C8",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Startup Mahakumbh March 2024-C9",
+      "branchCode": "DLBH07-0324-C9",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Startup Mahakumbh March 2024-C10",
+      "branchCode": "DLBH07-0324-C10",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Startup Mahakumbh March 2024-C11",
+      "branchCode": "DLBH07-0324-C11",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Startup Mahakumbh March 2024-C12",
+      "branchCode": "DLBH07-0324-C12",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "IPL 2024-C1",
+      "branchCode": "KABLR07-IPL0324-C1",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "IPL 2024-C2",
+      "branchCode": "KABLR07-IPL0324-C2",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "IPL 2024-C3",
+      "branchCode": "KABLR07-IPL0324-C3",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "IPL 2024-C4",
+      "branchCode": "KABLR07-IPL0324-C4",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "IPL 2024-C5",
+      "branchCode": "KABLR07-IPL0324-C5",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "IPL 2024-C6",
+      "branchCode": "KABLR07-IPL0324-C6",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "IPL 2024-C7",
+      "branchCode": "KABLR07-IPL0324-C7",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "IPL 2024-C8",
+      "branchCode": "KABLR07-IPL0324-C8",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "St. Joseph's ODC Apr 2024",
+      "branchCode": "KABLR07-140424",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Collegedunia Career Carnival 2024",
+      "branchCode": "KABLR07-CCC2024",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Jayamahal Durga Puja Oct 2024",
+      "branchCode": "KA07-JDP1024",
+      "warehouse": "ODC - HFABPL"
+     },
+     {
+      "branchName": "Malnad College of Engineering",
+      "branchCode": "KA090221",
+      "warehouse": "Malnad College of Engineering - HFABPL"
+     }
+    ]
