@@ -88,7 +88,7 @@ let obj={
   amount_eligible_for_commission: 0,
   total_commission: null,
   posting_date: new Date().toISOString().split('T')[0],
-  posting_time: new Date().toTimeString().split(' ')[0],
+  posting_time: '23:00:00',
   due_date: new Date().toISOString().split('T')[0],
   tax_id: "29AAECH3107Q1Z8",
   customer_name: "Hyggelig Co-Working Private Limited",

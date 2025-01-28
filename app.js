@@ -94,7 +94,7 @@ const sendErrorMail = async (branch, error, token) => {
 
     const mailOptions = {
       from: process.env.MAIL_FROM_ADDRESS,
-      to: ["dharmendra@avidusinteractive.com","aa@avidusinteractive.com"
+      to: ["dharmendra@avidusinteractive.com"
       ], // Send email to yourself or other recipients
       subject,
       html: htmlContent,
@@ -335,7 +335,9 @@ const fetchSalesSummary = async () => {
       const cleanedArray = transformedItems.filter(item => item !== undefined);
       obj.items = cleanedArray;
       obj.taxes = taxes;
-
+      obj.lr_date=period
+      obj.posting_date=period
+      obj.due_date=period
       const loginData = JSON.stringify({
         usr: "kunal.m@jcssglobal.com",
         pwd: "jcss@123",
@@ -398,12 +400,12 @@ const fetchSalesSummary = async () => {
     }
   }
 };
-fetchSalesSummary()
-// // // Schedule the cron job
-// cron.schedule("5 0 * * *", () => {
-//   console.log("Running fetch-sales-summary cron job at 12:05 AM");
-//   fetchSalesSummary();
-// });
+// fetchSalesSummary()
+// // Schedule the cron job
+cron.schedule("5 0 * * *", () => {
+  console.log("Running fetch-sales-summary cron job at 12:05 AM");
+  fetchSalesSummary();
+});
 
 // app.get("/fetch-sales-summary", async (req, res) => {
 //  try {
