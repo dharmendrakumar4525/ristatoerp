@@ -13,7 +13,11 @@ const cron = require("node-cron");
 const app = express();
 const allbranch = require("./latestBranchName.json");
 const nodemailer = require('nodemailer');
+const { format } = require('fast-csv');
+const ObjectsToCsv = require('objects-to-csv');
 let pool;
+const fs = require('fs');
+const moment = require("moment-timezone")
 // Initialize connection pool
 const initializePool = () => {
   if (!pool) {
@@ -34,6 +38,8 @@ const initializePool = () => {
   }
   return pool;
 };
+
+
 
 // Query function using the pool
 const query = async (sql, params, retries = 3) => {
@@ -94,7 +100,7 @@ const sendErrorMail = async (branch, error, token) => {
 
     const mailOptions = {
       from: process.env.MAIL_FROM_ADDRESS,
-      to: ["dharmendra@avidusinteractive.com","aa@avidusinteractive.com"
+      to: ["dharmendra@avidusinteractive.com"
       ], // Send email to yourself or other recipients
       subject,
       html: htmlContent,
@@ -122,7 +128,6 @@ const fetchSalesSummary = async () => {
     console.error("Error:", error.message);
   }
   const branch_data = branch_list.data;
-  console.log(branch_data.length,"branch length")
   if (branch_data.length == 0) {
     return console.log("No Branch fetched!");
   }
@@ -135,7 +140,7 @@ const fetchSalesSummary = async () => {
   let totalitem=1
   for (let i = 0; i < branch_data.length; i++) {
     let branch = branch_data[i].branchCode;
-    let period = getOneDayBeforeDate();
+    let period = '2025-01-30';
     
     try {
       const response = await axios.get(
@@ -149,8 +154,12 @@ const fetchSalesSummary = async () => {
           },
         }
       );
+      fetchSalesData(branch, period,apiKey,token);
+      // return 0;
       const items = response.data.items;
-      console.log(totalitem,"totalcounter")
+
+      
+   
       totalitem++
       if(items.length!==0){
       
@@ -384,7 +393,7 @@ const fetchSalesSummary = async () => {
         console.log(items.length,"count",count,"branchinfo",branch)
       count++
       } catch (error) {
-         console.error("Error:", error.response.data);
+         console.error("Error:", error);
          sendErrorMail(branch, JSON.stringify(error.response.data),period );
         // console.log({ error: error.message ,branchinfo:branch});
       }
@@ -398,7 +407,7 @@ const fetchSalesSummary = async () => {
     }
   }
 };
-fetchSalesSummary()
+fetchSalesSummary();
 // // // Schedule the cron job
 // cron.schedule("5 0 * * *", () => {
 //   console.log("Running fetch-sales-summary cron job at 12:05 AM");
@@ -479,6 +488,128 @@ fetchSalesSummary()
 //     res.status(500).json({ message: 'Failed to process file', error });
 //   }
 // });
+
+
+
+async function fetchSalesData(branch, period, apiKey, token, lastKey = null, retries = 3) {
+  try {
+    let params = { branch, day: period };
+    if (lastKey) params.lastKey = lastKey;
+
+    let tokenToUse = token; // Store current token
+
+    const response = await axios.get(
+      `https://api.ristaapps.com/v1/sales/summary`,
+      {
+        params,
+        headers: {
+          "x-api-key": apiKey,
+          "x-api-token": tokenToUse,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const salesData = response.data.data;
+    console.log(`Fetched ${salesData.length} records.`);
+
+    if (salesData.length > 0) {
+      await saveSalesData(salesData);
+
+      let newLastKey = response.data.hasOwnProperty("lastKey") ? response.data.lastKey : null;
+
+      if (newLastKey) {
+        console.log(`Fetching more data with lastKey: ${newLastKey}`);
+        await fetchSalesData(branch, period, apiKey, tokenToUse, newLastKey, retries);
+      } else {
+        console.log("✅ No more data to fetch.");
+      }
+    } else {
+      console.log("No data found.");
+    }
+
+  } catch (error) {
+    if (error.response && error.response.status === 401 && retries > 0) {
+      console.log("⚠️ Token expired! Generating a new token...");
+      
+      // Generate new token
+      const newToken = generateToken();
+
+      // Retry with new token
+      await fetchSalesData(branch, period, apiKey, newToken, lastKey, retries - 1);
+    } else {
+      console.error("❌ Error fetching sales data:", error.response?.data || error.message);
+    }
+  }
+}
+
+
+async function saveSalesData(salesData) {
+  if (!salesData || salesData.length === 0) return; // Skip if no data
+
+  console.log("First sales entry:", salesData[0]);
+
+  // Get unique branch names
+  const branchCodes = [...new Set(salesData.map((data) => data.branchCode))];
+
+  // Fetch cost_centre for each unique branch in parallel
+  const branchCostCentreMap = {};
+  try {
+    const costCentreResults = await Promise.all(
+      branchCodes.map(async (branchCode) => {
+        const [rows] = await query("SELECT cost_centre FROM warehouse_data WHERE branch_code = ?", [branchCode]);
+        console.log(rows.cost_centre,"rowsrowsrowsrowsrowsrowsrowsrowsrowsrowsrows")
+        return { branchCode, costCentre: rows ? rows.cost_centre : null };
+      })
+    );
+
+    console.log(costCentreResults[0],costCentreResults[1],costCentreResults[3],"costCentreResultscostCentreResultscostCentreResults");
+    // Store results in map
+    costCentreResults.forEach(({ branchCode, costCentre }) => {
+      branchCostCentreMap[branchCode] = costCentre;
+    });
+  } catch (err) {
+    console.error("Error fetching branch cost centres:", err);
+    return;
+  }
+
+  // Construct SQL query
+  const sql = `
+      INSERT INTO sales (
+          branch_name, branch_code, invoice_number, invoice_date, 
+          invoice_type, direct_charge_amount, charge_amount, gross_amount, 
+          discount_amount, tax_amount, net_amount, round_off_amount, 
+          tip_amount, total_amount, channel, status, sale_by
+      ) VALUES ${salesData.map(() => "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").join(", ")}`;
+
+  // Prepare values
+  const values = salesData.flatMap((data) => [
+    branchCostCentreMap[data.branchCode] || null,
+    data.branchName || null,
+    data.invoiceNumber || null,
+    moment(data.invoiceDate).format("YYYY-MM-DD HH:mm:ss") || "0000-00-00 00:00:00",
+    data.invoiceType || null,
+    data.directChargeAmount || 0,
+    data.chargeAmount || 0,
+    data.grossAmount || 0,
+    data.discountAmount || 0,
+    data.taxAmount || 0,
+    data.netAmount || 0,
+    data.roundOffAmount || 0,
+    data.tipAmount || 0,
+    data.totalAmount || 0,
+    data.channel || null,
+    data.status || null,
+    data.saleBy || null
+  ]);
+
+  try {
+    await query(sql, values);
+    console.log("Data successfully saved to MySQL.");
+  } catch (error) {
+    console.error("Error inserting sales data:", error);
+  }
+}
 
 // Start the Server
 const PORT = process.env.PORT || 3000;
